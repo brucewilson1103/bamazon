@@ -35,25 +35,23 @@ connection.connect(function (err) {
     // console.table(connection.query("select * from products"));
     start();
   });
+
 });
 
 function start() {
   inquirer
     .prompt({
       name: "action",
-      type: "rawlist",
+      type: "list",
       message: "Welcome to Bamazon! How can I help you today?",
-      choices: ["Order Something", "Option 2", "EXIT"]
+      choices: ["Order Something", "EXIT"]
     })
     .then(function (answer) {
       // based on their answer, either call the different functions
-      switch (answer) {
+      console.log(answer)
+      switch (answer.action) {
         case "Order Something":
           orderSomething();
-          break;
-
-        case "Option 2":
-          bidAuction();
           break;
 
         case "EXIT":
