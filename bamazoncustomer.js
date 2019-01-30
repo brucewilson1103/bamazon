@@ -25,9 +25,9 @@ connection.connect(function (err) {
   console.log("_________________________________________")
   connection.query("SELECT product_name, item_id, price FROM products", function (err, results) {
     if (err) throw err;
-
+    console.log("\n" + results.length + " Different Types of Inventory Items\n")
     for (var i = 0; i < results.length; i++) {
-      console.log("Product Name: "+results[i].product_name +"\nItem ID: "+results[i].item_id+"\nPrice: $"+results[i].price + "\n___________________\n")
+      console.log("Product Name: " + results[i].product_name + "\nItem ID: " + results[i].item_id + "\nPrice: $" + results[i].price + "\n___________________\n")
     };
     // for (var i = 0; i < results.length; i++) {
     //   console.log(results[i].item_id)
@@ -41,7 +41,7 @@ function start() {
   inquirer
     .prompt({
       name: "action",
-      type: "list",
+      type: "rawlist",
       message: "Welcome to Bamazon! How can I help you today?",
       choices: ["Order Something", "Option 2", "EXIT"]
     })
@@ -77,13 +77,20 @@ var orderSomething = function () {
     .prompt([{
         name: "item",
         type: "input",
-        message: "What is the item number of the item that you would like to order?"
+        message: "What is the ID number of the item that you would like to order?"
+      },
+      {
+        name: "category",
+        type: "input",
+        message: "How many units of this item would you like to buy?"
+      },
+      {
+        type: "confirm",
+        message: "Are you sure that you would like to place this order?",
+        name: "confirm",
+        default: true
       }
-      // {
-      //   name: "category",
-      //   type: "input",
-      //   message: "What category would you like to place your auction in?"
-      // },
+
       // {
       //   name: "startingBid",
       //   type: "input",
@@ -98,19 +105,21 @@ var orderSomething = function () {
     ])
     .then(function (answer) {
       // when finished prompting, insert a new item into the db with that info
-      connection.query(
-        "INSERT INTO auctions SET ?", {
-          item_name: answer.item,
-          category: answer.category,
-          starting_bid: answer.startingBid || 0,
-          highest_bid: answer.startingBid || 0
-        },
-        function (err) {
-          if (err) throw err;
-          console.log("Your auction was created successfully!");
-          // re-prompt the user for if they want to bid or post
-          start();
-        }
-      );
+      if (inquireResponse) {
+        connection.query(
+          "INSERT INTO auctions SET ?", {
+            item_name: answer.item,
+            category: answer.category,
+            starting_bid: answer.startingBid || 0,
+            highest_bid: answer.startingBid || 0
+          },
+          function (err) {
+            if (err) throw err;
+            console.log("Your auction was created successfully!");
+            // re-prompt the user for if they want to bid or post
+            start();
+          }
+        );
+      }
     });
-}
+};
