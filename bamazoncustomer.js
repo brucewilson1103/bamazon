@@ -17,79 +17,95 @@ var connection = mysql.createConnection({
 });
 
 
-connection.connect(function(err) {
+connection.connect(function (err) {
   if (err) throw err;
   // run the start function after the connection is made to prompt the user
   // start();
   console.log("connected");
   console.log("_________________________________________")
-  connection.query("SELECT * FROM products", function (err, results) {
+  connection.query("SELECT product_name, item_id, price FROM products", function (err, results) {
     if (err) throw err;
-    
-    for (var i=0; i<results.length; i++){
-    console.log(results[i].product_name)}
+
+    for (var i = 0; i < results.length; i++) {
+      console.log("Product Name: "+results[i].product_name +"\nItem ID: "+results[i].item_id+"\nPrice: $"+results[i].price + "\n___________________\n")
+    };
+    // for (var i = 0; i < results.length; i++) {
+    //   console.log(results[i].item_id)
+    // };
+    // console.table(connection.query("select * from products"));
     start();
   });
 });
+
 function start() {
   inquirer
     .prompt({
-      name: "postOrBid",
+      name: "action",
       type: "list",
-      message: "Would you like to [POST] an auction or [BID] on an auction?",
-      choices: ["POST", "BID", "EXIT"]
+      message: "Welcome to Bamazon! How can I help you today?",
+      choices: ["Order Something", "Option 2", "EXIT"]
     })
-    .then(function(answer) {
-      // based on their answer, either call the bid or the post functions
-      if (answer.postOrBid === "POST") {
-        postAuction();
+    .then(function (answer) {
+      // based on their answer, either call the different functions
+      switch (answer) {
+        case "Order Something":
+          orderSomething();
+          break;
+
+        case "Option 2":
+          bidAuction();
+          break;
+
+        case "EXIT":
+          connection.end();
       }
-      else if(answer.postOrBid === "BID") {
-        bidAuction();
-      } else{
-        connection.end();
-      }
+      // if (answer.postOrBid === "POST") {
+      //   postAuction();
+      // }
+      // else if(answer.postOrBid === "BID") {
+      // //   bidAuction();
+      // // } else{
+      //   connection.end();
+      // }
     });
 }
 
 // function to handle posting new items up for auction
-function postAuction() {
+var orderSomething = function () {
   // prompt for info about the item being put up for auction
   inquirer
-    .prompt([
-      {
+    .prompt([{
         name: "item",
         type: "input",
-        message: "What is the item you would like to submit?"
-      },
-      {
-        name: "category",
-        type: "input",
-        message: "What category would you like to place your auction in?"
-      },
-      {
-        name: "startingBid",
-        type: "input",
-        message: "What would you like your starting bid to be?",
-        validate: function(value) {
-          if (isNaN(value) === false) {
-            return true;
-          }
-          return false;
-        }
+        message: "What is the item number of the item that you would like to order?"
       }
+      // {
+      //   name: "category",
+      //   type: "input",
+      //   message: "What category would you like to place your auction in?"
+      // },
+      // {
+      //   name: "startingBid",
+      //   type: "input",
+      //   message: "What would you like your starting bid to be?",
+      //   validate: function (value) {
+      //     if (isNaN(value) === false) {
+      //       return true;
+      //     }
+      //     return false;
+      //   }
+      // }
     ])
-    .then(function(answer) {
+    .then(function (answer) {
       // when finished prompting, insert a new item into the db with that info
       connection.query(
-        "INSERT INTO auctions SET ?",
-        {
+        "INSERT INTO auctions SET ?", {
           item_name: answer.item,
           category: answer.category,
           starting_bid: answer.startingBid || 0,
           highest_bid: answer.startingBid || 0
         },
-        function(err) {
+        function (err) {
           if (err) throw err;
           console.log("Your auction was created successfully!");
           // re-prompt the user for if they want to bid or post
