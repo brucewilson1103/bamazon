@@ -29,10 +29,7 @@ connection.connect(function (err) {
     for (var i = 0; i < results.length; i++) {
       console.log("Product Name: " + results[i].product_name + "\nItem ID: " + results[i].item_id + "\nPrice: $" + results[i].price + "\n___________________\n")
     };
-    // for (var i = 0; i < results.length; i++) {
-    //   console.log(results[i].item_id)
-    // };
-    // console.table(connection.query("select * from products"));
+    
     start();
   });
 
@@ -47,7 +44,7 @@ function start() {
       choices: ["Order Something", "EXIT"]
     })
     .then(function (answer) {
-      // based on their answer, either call the different functions
+      // based on their answer, call the different functions
       console.log(answer)
       switch (answer.action) {
         case "Order Something":
@@ -56,6 +53,7 @@ function start() {
 
         case "EXIT":
           connection.end();
+          break;
       }
       // if (answer.postOrBid === "POST") {
       //   postAuction();
@@ -68,56 +66,77 @@ function start() {
     });
 }
 
-// function to handle posting new items up for auction
+// function to handle customer ordering an item
 var orderSomething = function () {
-  // prompt for info about the item being put up for auction
+   
   inquirer
     .prompt([{
         name: "item",
         type: "input",
-        message: "What is the ID number of the item that you would like to order?"
+        message: "What is the ID number of the item that you would like to order?",
+        validate: function (value) {
+          // also should add less than results.length
+              if (isNaN(value) === false) {
+                return true;
+              }
+              return false
+              console.log("Please enter a valid id number" );
+            }
       },
       {
-        name: "category",
+        name: "quantity",
         type: "input",
-        message: "How many units of this item would you like to buy?"
-      },
-      {
-        type: "confirm",
-        message: "Are you sure that you would like to place this order?",
-        name: "confirm",
-        default: true
+        message: "How many units of this item would you like to buy?",
+        validate: function (value) {
+          // also should add less than results.length
+              if (isNaN(value) === false) {
+                return true;
+              }
+              return false
+              console.log("Please enter a valid id number" );
+            }
+        
       }
-
-      // {
-      //   name: "startingBid",
-      //   type: "input",
-      //   message: "What would you like your starting bid to be?",
-      //   validate: function (value) {
-      //     if (isNaN(value) === false) {
-      //       return true;
-      //     }
-      //     return false;
-      //   }
-      // }
+          
     ])
+
+    // maybe  answer.action
     .then(function (answer) {
-      // when finished prompting, insert a new item into the db with that info
-      if (inquireResponse) {
-        connection.query(
-          "INSERT INTO auctions SET ?", {
-            item_name: answer.item,
-            category: answer.category,
-            starting_bid: answer.startingBid || 0,
-            highest_bid: answer.startingBid || 0
-          },
-          function (err) {
-            if (err) throw err;
-            console.log("Your auction was created successfully!");
-            // re-prompt the user for if they want to bid or post
-            start();
-          }
-        );
-      }
+      // when finished prompting, this will check the quantity of the ordered item in the database. If the quantity ordered exists then place the order.
+        //If not state "Inifficient Quantity! and prevent the order from going through"
+        connection.query("SELECT stock_quantity FROM products WHERE ?",  [{item_id: answer.item}], function (err, results) {
+          if (err) throw err;
+          console.log(results[0].stock_quantity);
+          var inventory = results[0].stock_quantity;
+
+          if (inventory > answer.quantity){
+            connection.query(
+              // maybe use the update command to communicate with the SQL database
+              "UPDATE products SET ? WHERE ?", 
+              [{
+                stock_quantity: inventory - answer.quantity
+              },
+              {
+                item_id: answer.item
+              }],
+              function (err, results) {
+                if (err) throw err;
+                console.log("Your transaction was completed successfully!");
+                // re-prompt the user for if they want to purchase more items or exit
+                console.log(results);
+                start();
+              }
+            );
+          }else{
+            console.log("Sorry not enough inventory.")
+          };
+        
+        })
+//       if (answer.it) {
+// //         This means updating the SQL database to reflect the remaining quantity.
+// // Once the update goes through, show the customer the total cost of their purchase.
+
+       
+      
     });
 };
