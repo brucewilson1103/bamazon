@@ -104,10 +104,12 @@ var orderSomething = function () {
     .then(function (answer) {
       // when finished prompting, this will check the quantity of the ordered item in the database. If the quantity ordered exists then place the order.
         //If not state "Inifficient Quantity! and prevent the order from going through"
-        connection.query("SELECT stock_quantity FROM products WHERE ?",  [{item_id: answer.item}], function (err, results) {
+        connection.query("SELECT stock_quantity, price FROM products WHERE ?",  [{item_id: answer.item}], function (err, results) {
           if (err) throw err;
           console.log(results[0].stock_quantity);
           var inventory = results[0].stock_quantity;
+          var price = results[0].price;
+          console.log(price);
 
           if (inventory > answer.quantity){
             connection.query(
@@ -122,8 +124,9 @@ var orderSomething = function () {
               function (err, results) {
                 if (err) throw err;
                 console.log("Your transaction was completed successfully!");
+                console.log("Your total cost came to: "+price + " dollars.")
                 // re-prompt the user for if they want to purchase more items or exit
-                console.log(results);
+                // console.log(results);
                 start();
               }
             );
